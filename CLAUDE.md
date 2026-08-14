@@ -65,6 +65,7 @@ src/
 - **Named export** 함수 컴포넌트로 통일 (`export function ComponentName(...)`), 파일명 = 컴포넌트명. `App.tsx`를 포함해 `export default`는 쓰지 않는다.
 - Props 타입은 `interface <ComponentName>Props { ... }`로 컴포넌트 바로 위에 선언.
 - 스타일링은 Tailwind CSS v4 유틸리티 클래스 (`@theme` 커스텀 토큰은 `src/index.css` 참고: `bg-card`, `text-foreground`, `border-border` 등). 인라인 `style` 속성은 Tailwind에 없는 값(예: `Layout.tsx`의 커스텀 폰트, `calc(100vh - 65px)`)에만 예외적으로 사용.
+- 모든 스타일 작업(색상, 타이포그래피, 간격, elevation, 컴포넌트 패턴)은 `docs/design-system/`("The Digital Atelier" 디자인 시스템, 인덱스: [`README.md`](docs/design-system/README.md))를 참고 기준으로 삼는다. 문서 전체를 매번 읽지 말고 `design-system` Skill(`.claude/skills/design-system/SKILL.md`)이 작업 종류에 맞는 파일로 라우팅하게 할 것. Do/Don't 중 일부(순수 검정, 기본 shadow 프리셋, `border-border` 신규 사용)는 `.claude/hooks/design-system-lint.mjs` PreToolUse hook이 자동 차단한다.
 - JSX 섹션마다 한글 주석으로 구획 표시 (`{/* 헤더 */}`, `{/* 버튼 영역 */}` 등) — 기존 파일들의 일관된 스타일.
 - 리스트/폼 컴포넌트는 로딩/에러/빈 상태를 개별 early return으로 처리 (`NoteList.tsx` 참고).
 - 에러/유효성 검사 실패는 `alert()`가 아니라 `console.error()`로만 처리한다.
