@@ -22,6 +22,16 @@ npm run test:watch       # vitest watch 모드
 
 주의: 앱은 `http://localhost:3001`의 json-server에 의존한다. `npm run dev`로 프론트만 켜져 있으면 API 호출이 실패한다.
 
+## Git 커밋 규칙
+
+husky + lint-staged + commitlint로 강제됨 (`.husky/pre-commit`, `.husky/commit-msg`, `commitlint.config.cjs`).
+
+- **pre-commit**: staged된 `*.{js,jsx,ts,tsx}`에 `eslint --fix`, `*.{js,jsx,ts,tsx,css,md,json}`에 `prettier --write` 자동 실행.
+- **commit-msg**: Conventional Commits 형식(`type: subject`) 강제.
+  - `type`은 `build/chore/ci/docs/feat/fix/init/perf/refactor/revert/style/test` 중 하나.
+  - 제목(subject) 필수, 본문(body) 필수 + 최소 2줄.
+  - `git commit -m "type: 제목" -m "본문 1줄" -m "본문 2줄"` 형태로 커밋할 것 — `-m` 하나만 쓰면 본문 부족으로 거부됨.
+
 ## Architecture
 
 ```
