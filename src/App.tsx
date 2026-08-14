@@ -4,7 +4,7 @@ import { Layout } from './components/Layout';
 import { NoteList } from './components/NoteList';
 import { NoteEditor } from './components/NoteEditor';
 
-function App() {
+export function App() {
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
 
@@ -39,5 +39,3 @@ function App() {
     </NotesProvider>
   );
 }
-
-export default App;

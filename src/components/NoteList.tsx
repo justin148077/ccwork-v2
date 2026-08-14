@@ -7,9 +7,9 @@ interface NoteListProps {
 }
 
 export function NoteList({ selectedNoteId, onSelect }: NoteListProps) {
-  const { notes, loading, error, removeNote } = useNotes();
+  const { notes, isLoading, error, deleteNote } = useNotes();
 
-  if (loading) {
+  if (isLoading) {
     return (
       <p className="text-sm text-muted-foreground text-center py-8">로딩 중...</p>
     );
@@ -38,7 +38,7 @@ export function NoteList({ selectedNoteId, onSelect }: NoteListProps) {
           note={note}
           isSelected={note.id === selectedNoteId}
           onSelect={onSelect}
-          onDelete={removeNote}
+          onDelete={deleteNote}
         />
       ))}
     </>

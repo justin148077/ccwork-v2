@@ -8,10 +8,10 @@ interface NoteEditorProps {
 }
 
 export function NoteEditor({ selectedNoteId, isCreating, onDone }: NoteEditorProps) {
-  const { notes, addNote, editNote } = useNotes();
+  const { notes, createNote, updateNote } = useNotes();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [saving, setSaving] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const selectedNote = notes.find((n) => n.id === selectedNoteId);
 
@@ -28,23 +28,22 @@ export function NoteEditor({ selectedNoteId, isCreating, onDone }: NoteEditorPro
 
   const handleSave = async () => {
     if (!title.trim()) {
-      alert('제목을 입력해주세요');
+      console.error('제목을 입력해주세요');
       return;
     }
 
-    setSaving(true);
+    setIsSaving(true);
     try {
       if (isCreating) {
-        await addNote(title, content);
+        await createNote(title, content);
       } else if (selectedNoteId) {
-        await editNote(selectedNoteId, { title, content });
+        await updateNote(selectedNoteId, { title, content });
       }
       onDone();
     } catch (e) {
-      console.error(e);
-      alert('저장에 실패했습니다');
+      console.error('저장에 실패했습니다', e);
     } finally {
-      setSaving(false);
+      setIsSaving(false);
     }
   };
 
@@ -94,10 +93,10 @@ export function NoteEditor({ selectedNoteId, isCreating, onDone }: NoteEditorPro
       <div className="flex gap-3 mt-6 pt-4 border-t border-border">
         <button
           onClick={handleSave}
-          disabled={saving}
+          disabled={isSaving}
           className="bg-foreground text-card px-5 py-2 rounded-xl text-sm font-semibold hover:opacity-75 transition-opacity disabled:opacity-40 cursor-pointer"
         >
-          {saving ? '저장 중...' : '저장'}
+          {isSaving ? '저장 중...' : '저장'}
         </button>
         <button
           onClick={onDone}
