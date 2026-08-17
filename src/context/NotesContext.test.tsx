@@ -44,6 +44,27 @@ describe('NotesContext', () => {
     });
   });
 
+  describe('createNote (이슈 #8 — tags 전달)', () => {
+    it('should forward tags to api.createNote and reflect them in notes state', async () => {
+      mockedApi.fetchNotes.mockResolvedValue([]);
+      mockedApi.createNote.mockResolvedValue(buildNote({ id: 'n2', tags: ['bug-fix'] }));
+
+      const { result } = renderHook(() => useNotes(), { wrapper: NotesProvider });
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+      await act(async () => {
+        await result.current.createNote('제목', '내용', ['bug-fix']);
+      });
+
+      expect(mockedApi.createNote).toHaveBeenCalledWith({
+        title: '제목',
+        content: '내용',
+        tags: ['bug-fix'],
+      });
+      expect(result.current.notes.find((n) => n.id === 'n2')?.tags).toEqual(['bug-fix']);
+    });
+  });
+
   describe('새로고침 후 유지 (AC-1.3 후반부, 재마운트 시뮬레이션)', () => {
     it('should keep the updated tags after the provider remounts and refetches', async () => {
       mockedApi.fetchNotes.mockResolvedValueOnce([buildNote({ tags: [] })]);

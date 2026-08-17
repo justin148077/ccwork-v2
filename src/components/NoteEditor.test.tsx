@@ -25,16 +25,25 @@ function buildNote(overrides: Partial<Note> = {}): Note {
   } as Note;
 }
 
-function setupNotesMock(notes: Note[], updateNote = vi.fn().mockResolvedValue(undefined)) {
+function setupNotesMock(
+  notes: Note[],
+  {
+    updateNote = vi.fn().mockResolvedValue(undefined),
+    createNote = vi.fn().mockResolvedValue(undefined),
+  }: {
+    updateNote?: ReturnType<typeof vi.fn>;
+    createNote?: ReturnType<typeof vi.fn>;
+  } = {},
+) {
   mockedUseNotes.mockReturnValue({
     notes,
     isLoading: false,
     error: null,
-    createNote: vi.fn().mockResolvedValue(undefined),
+    createNote,
     updateNote,
     deleteNote: vi.fn().mockResolvedValue(undefined),
   });
-  return { updateNote };
+  return { updateNote, createNote };
 }
 
 describe('NoteEditor', () => {
@@ -252,6 +261,68 @@ describe('NoteEditor', () => {
         }),
       ).toBeInTheDocument();
       expect(tagInput).toHaveValue('');
+    });
+  });
+
+  describe('새 노트 생성 시 태그 저장 (이슈 #8)', () => {
+    it('should call createNote with the tags array when a new note with a tag is saved', async () => {
+      const user = userEvent.setup();
+      const { createNote } = setupNotesMock([]);
+
+      render(<NoteEditor selectedNoteId={null} isCreating={true} onDone={vi.fn()} />);
+
+      await user.type(screen.getByPlaceholderText('제목'), '제목');
+      await user.type(screen.getByPlaceholderText('태그 추가'), 'work{Enter}');
+      await user.click(screen.getByRole('button', { name: '저장' }));
+
+      expect(createNote).toHaveBeenCalledWith('제목', '', ['work']);
+    });
+
+    it('should call createNote with an empty tags array when a new note is saved without adding a tag', async () => {
+      const user = userEvent.setup();
+      const { createNote } = setupNotesMock([]);
+
+      render(<NoteEditor selectedNoteId={null} isCreating={true} onDone={vi.fn()} />);
+
+      await user.type(screen.getByPlaceholderText('제목'), '제목');
+      await user.click(screen.getByRole('button', { name: '저장' }));
+
+      expect(createNote).toHaveBeenCalledWith('제목', '', []);
+    });
+
+    it('should clear the tag chips when switching from an existing note to creating a new note', () => {
+      const note = buildNote({ id: 'n1', tags: ['a', 'b'] });
+      setupNotesMock([note]);
+
+      const { rerender } = render(
+        <NoteEditor selectedNoteId={note.id} isCreating={false} onDone={vi.fn()} />,
+      );
+      expect(screen.getByText('a')).toBeInTheDocument();
+      expect(screen.getByText('b')).toBeInTheDocument();
+
+      rerender(<NoteEditor selectedNoteId={null} isCreating={true} onDone={vi.fn()} />);
+
+      expect(screen.queryByText('a')).not.toBeInTheDocument();
+      expect(screen.queryByText('b')).not.toBeInTheDocument();
+    });
+
+    it('should call updateNote and not createNote when saving an existing note', async () => {
+      const user = userEvent.setup();
+      const note = buildNote({ id: 'n1', title: '제목', content: '내용', tags: [] });
+      const { updateNote, createNote } = setupNotesMock([note]);
+
+      render(<NoteEditor selectedNoteId={note.id} isCreating={false} onDone={vi.fn()} />);
+
+      const tagInput = screen.getByPlaceholderText('태그 추가');
+      await user.type(tagInput, 'react{Enter}');
+      await user.click(screen.getByRole('button', { name: '저장' }));
+
+      expect(updateNote).toHaveBeenCalledWith('n1', {
+        title: '제목',
+        content: '내용',
+        tags: ['react'],
+      });
+      expect(createNote).not.toHaveBeenCalled();
     });
   });
 

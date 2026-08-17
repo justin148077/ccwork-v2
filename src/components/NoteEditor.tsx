@@ -26,6 +26,7 @@ export function NoteEditor({ selectedNoteId, isCreating, onDone }: NoteEditorPro
     } else if (isCreating) {
       setTitle('');
       setContent('');
+      setTags([]);
     }
   }, [selectedNoteId, isCreating]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -57,7 +58,7 @@ export function NoteEditor({ selectedNoteId, isCreating, onDone }: NoteEditorPro
     setIsSaving(true);
     try {
       if (isCreating) {
-        await createNote(title, content);
+        await createNote(title, content, tags);
       } else if (selectedNoteId) {
         await updateNote(selectedNoteId, { title, content, tags });
       }
