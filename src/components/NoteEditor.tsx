@@ -31,7 +31,16 @@ export function NoteEditor({ selectedNoteId, isCreating, onDone }: NoteEditorPro
 
   const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key !== 'Enter') return;
-    setTags([...tags, tagInput]);
+    const trimmed = tagInput.trim();
+    if (!trimmed) {
+      console.error('태그를 입력해주세요');
+      return;
+    }
+    if (tags.some((t) => t.toLowerCase() === trimmed.toLowerCase())) {
+      console.error('이미 추가된 태그입니다');
+      return;
+    }
+    setTags([...tags, trimmed]);
     setTagInput('');
   };
 

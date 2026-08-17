@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, getDefaultNormalizer } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NoteEditor } from './NoteEditor';
@@ -213,6 +213,65 @@ describe('NoteEditor', () => {
 
       expect(screen.queryByText('react')).not.toBeInTheDocument();
       expect(screen.getByText('typescript')).toBeInTheDocument();
+    });
+  });
+
+  describe('빈 태그 거부 (AC-3.1)', () => {
+    it('should not add a chip and should log an error when only whitespace is entered', async () => {
+      const user = userEvent.setup();
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const note = buildNote({ tags: [] });
+      setupNotesMock([note]);
+
+      render(<NoteEditor selectedNoteId={note.id} isCreating={false} onDone={vi.fn()} />);
+
+      const tagInput = screen.getByPlaceholderText('태그 추가');
+      await user.type(tagInput, ' {Enter}');
+
+      expect(screen.queryByRole('button', { name: /삭제/ })).not.toBeInTheDocument();
+      expect(consoleErrorSpy).toHaveBeenCalledWith('태그를 입력해주세요');
+
+      consoleErrorSpy.mockRestore();
+    });
+  });
+
+  describe('앞뒤 공백 제거 (AC-3.2)', () => {
+    it('should trim surrounding whitespace and keep the original casing when a tag is added', async () => {
+      const user = userEvent.setup();
+      const note = buildNote({ tags: [] });
+      setupNotesMock([note]);
+
+      render(<NoteEditor selectedNoteId={note.id} isCreating={false} onDone={vi.fn()} />);
+
+      const tagInput = screen.getByPlaceholderText('태그 추가');
+      await user.type(tagInput, '  React  {Enter}');
+
+      expect(
+        screen.getByText('React', {
+          normalizer: getDefaultNormalizer({ trim: false, collapseWhitespace: false }),
+        }),
+      ).toBeInTheDocument();
+      expect(tagInput).toHaveValue('');
+    });
+  });
+
+  describe('대소문자 무시 중복 거부 (AC-3.3)', () => {
+    it('should not add a chip and should log an error when a case-insensitive duplicate tag is entered', async () => {
+      const user = userEvent.setup();
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const note = buildNote({ tags: ['React'] });
+      setupNotesMock([note]);
+
+      render(<NoteEditor selectedNoteId={note.id} isCreating={false} onDone={vi.fn()} />);
+
+      const tagInput = screen.getByPlaceholderText('태그 추가');
+      await user.type(tagInput, 'react{Enter}');
+
+      expect(screen.getAllByText('React')).toHaveLength(1);
+      expect(screen.queryByText('react')).not.toBeInTheDocument();
+      expect(consoleErrorSpy).toHaveBeenCalledWith('이미 추가된 태그입니다');
+
+      consoleErrorSpy.mockRestore();
     });
   });
 });
