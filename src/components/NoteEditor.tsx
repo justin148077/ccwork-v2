@@ -35,6 +35,10 @@ export function NoteEditor({ selectedNoteId, isCreating, onDone }: NoteEditorPro
     setTagInput('');
   };
 
+  const handleRemoveTag = (tag: string) => {
+    setTags(tags.filter((t) => t !== tag));
+  };
+
   const handleSave = async () => {
     if (!title.trim()) {
       console.error('제목을 입력해주세요');
@@ -99,8 +103,19 @@ export function NoteEditor({ selectedNoteId, isCreating, onDone }: NoteEditorPro
       {/* 태그 영역 */}
       <div className="flex flex-wrap items-center gap-2 mt-6">
         {tags.map((tag) => (
-          <span key={tag} className="bg-[#dbe4e7] text-[#586064] rounded-full px-3 py-1 text-sm">
+          <span
+            key={tag}
+            className="bg-[#dbe4e7] text-[#586064] rounded-full pl-3 pr-2 py-1 text-sm flex items-center gap-1"
+          >
             {tag}
+            <button
+              type="button"
+              onClick={() => handleRemoveTag(tag)}
+              aria-label={`${tag} 삭제`}
+              className="hover:text-destructive transition-colors cursor-pointer"
+            >
+              ×
+            </button>
           </span>
         ))}
         <input

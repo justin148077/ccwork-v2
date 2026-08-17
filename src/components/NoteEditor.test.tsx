@@ -126,6 +126,78 @@ describe('NoteEditor', () => {
     });
   });
 
+  describe('태그 삭제 (AC-2.1)', () => {
+    it('should remove the chip immediately when its delete button is clicked', async () => {
+      const user = userEvent.setup();
+      const note = buildNote({ tags: ['react', 'typescript'] });
+      setupNotesMock([note]);
+
+      render(<NoteEditor selectedNoteId={note.id} isCreating={false} onDone={vi.fn()} />);
+
+      await user.click(screen.getByRole('button', { name: 'react 삭제' }));
+
+      expect(screen.queryByText('react')).not.toBeInTheDocument();
+      expect(screen.getByText('typescript')).toBeInTheDocument();
+    });
+  });
+
+  describe('저장 전 로컬 상태 (AC-2.2)', () => {
+    it('should not call updateNote when a tag is removed but save has not been clicked', async () => {
+      const user = userEvent.setup();
+      const note = buildNote({ tags: ['react', 'typescript'] });
+      const { updateNote } = setupNotesMock([note]);
+
+      render(<NoteEditor selectedNoteId={note.id} isCreating={false} onDone={vi.fn()} />);
+
+      await user.click(screen.getByRole('button', { name: 'react 삭제' }));
+
+      expect(updateNote).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('저장 (AC-2.3)', () => {
+    it('should call updateNote with tags excluding the removed tag when save is clicked', async () => {
+      const user = userEvent.setup();
+      const note = buildNote({
+        id: 'n1',
+        title: '제목',
+        content: '내용',
+        tags: ['react', 'typescript'],
+      });
+      const { updateNote } = setupNotesMock([note]);
+
+      render(<NoteEditor selectedNoteId={note.id} isCreating={false} onDone={vi.fn()} />);
+
+      await user.click(screen.getByRole('button', { name: 'react 삭제' }));
+      await user.click(screen.getByRole('button', { name: '저장' }));
+
+      expect(updateNote).toHaveBeenCalledWith('n1', {
+        title: '제목',
+        content: '내용',
+        tags: ['typescript'],
+      });
+    });
+  });
+
+  describe('마지막 태그 삭제 (AC-2.4)', () => {
+    it('should save an empty tags array when the last remaining tag is removed', async () => {
+      const user = userEvent.setup();
+      const note = buildNote({ id: 'n1', title: '제목', content: '내용', tags: ['react'] });
+      const { updateNote } = setupNotesMock([note]);
+
+      render(<NoteEditor selectedNoteId={note.id} isCreating={false} onDone={vi.fn()} />);
+
+      await user.click(screen.getByRole('button', { name: 'react 삭제' }));
+      await user.click(screen.getByRole('button', { name: '저장' }));
+
+      expect(updateNote).toHaveBeenCalledWith('n1', {
+        title: '제목',
+        content: '내용',
+        tags: [],
+      });
+    });
+  });
+
   describe('노트 전환 시 태그 재동기화', () => {
     it('should show the other note tags when the selected note changes', () => {
       const noteA = buildNote({ id: 'n1', tags: ['react'] });
