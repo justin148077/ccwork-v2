@@ -9,13 +9,13 @@ export async function fetchNotes(): Promise<Note[]> {
 }
 
 export async function createNote(
-  note: Omit<Note, 'id' | 'createdAt' | 'updatedAt'>,
+  note: Omit<Note, 'id' | 'createdAt' | 'updatedAt' | 'tags'> & { tags?: string[] },
 ): Promise<Note> {
   const now = new Date().toISOString();
   const res = await fetch(`${API_URL}/notes`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ...note, createdAt: now, updatedAt: now }),
+    body: JSON.stringify({ ...note, tags: note.tags ?? [], createdAt: now, updatedAt: now }),
   });
   if (!res.ok) throw new Error('노트 생성에 실패했습니다');
   return res.json();

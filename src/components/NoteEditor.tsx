@@ -11,6 +11,8 @@ export function NoteEditor({ selectedNoteId, isCreating, onDone }: NoteEditorPro
   const { notes, createNote, updateNote } = useNotes();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
   const selectedNote = notes.find((n) => n.id === selectedNoteId);
@@ -20,11 +22,18 @@ export function NoteEditor({ selectedNoteId, isCreating, onDone }: NoteEditorPro
     if (selectedNote) {
       setTitle(selectedNote.title);
       setContent(selectedNote.content);
+      setTags(selectedNote.tags ?? []);
     } else if (isCreating) {
       setTitle('');
       setContent('');
     }
   }, [selectedNoteId, isCreating]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== 'Enter') return;
+    setTags([...tags, tagInput]);
+    setTagInput('');
+  };
 
   const handleSave = async () => {
     if (!title.trim()) {
@@ -37,7 +46,7 @@ export function NoteEditor({ selectedNoteId, isCreating, onDone }: NoteEditorPro
       if (isCreating) {
         await createNote(title, content);
       } else if (selectedNoteId) {
-        await updateNote(selectedNoteId, { title, content });
+        await updateNote(selectedNoteId, { title, content, tags });
       }
       onDone();
     } catch (e) {
@@ -53,9 +62,7 @@ export function NoteEditor({ selectedNoteId, isCreating, onDone }: NoteEditorPro
       <div className="flex items-center justify-center h-full">
         <div className="text-center space-y-3">
           <p className="text-5xl">📝</p>
-          <p className="text-muted-foreground text-sm">
-            노트를 선택하거나 새 노트를 만드세요
-          </p>
+          <p className="text-muted-foreground text-sm">노트를 선택하거나 새 노트를 만드세요</p>
         </div>
       </div>
     );
@@ -88,6 +95,23 @@ export function NoteEditor({ selectedNoteId, isCreating, onDone }: NoteEditorPro
         rows={14}
         className="w-full text-base text-foreground/70 bg-transparent border-none outline-none resize-none placeholder:text-muted-foreground/50 leading-relaxed"
       />
+
+      {/* 태그 영역 */}
+      <div className="flex flex-wrap items-center gap-2 mt-6">
+        {tags.map((tag) => (
+          <span key={tag} className="bg-[#dbe4e7] text-[#586064] rounded-full px-3 py-1 text-sm">
+            {tag}
+          </span>
+        ))}
+        <input
+          type="text"
+          value={tagInput}
+          onChange={(e) => setTagInput(e.target.value)}
+          onKeyDown={handleAddTag}
+          placeholder="태그 추가"
+          className="bg-card border border-[#abb3b7]/15 focus:border-[#0053dc] outline-none rounded-full px-3 py-1 text-sm placeholder:text-muted-foreground/50"
+        />
+      </div>
 
       {/* 버튼 영역 */}
       <div className="flex gap-3 mt-6 pt-4 border-t border-border">
