@@ -1,0 +1,6 @@
+{"step":"scenarios","status":"OK","issue":11,"feature":"tag-filter","doc_path":"docs/features/tag-filter/issue-11.md","scenario_count":4,"reason":null}
+{"step":"red","status":"OK","issue":11,"test_files":["src/components/NoteItem.test.tsx"],"red_count":3,"reason":null}
+{"step":"green","status":"OK","issue":11,"attempt":1,"green_count":3,"stub_files":[],"reason":null}
+{"step":"ac_verify","status":"OK","issue":11,"ac_results":[{"id":"AC-2.1","verdict":"pass","note":"order preserved, test passes"},{"id":"AC-2.2","verdict":"pass","note":"empty/missing tags render nothing, no console.error"}],"ac_passed":true,"reason":null}
+{"step":"refactor","status":"OK","issue":11,"applied":[],"skipped":[],"reason":"리팩터링 대상 없음 - 34/34 통과"}
+{"step":"security","status":"OK","issue":11,"immediate_fixed":[],"recommended_remaining":[],"reason":null}

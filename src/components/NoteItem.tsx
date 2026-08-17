@@ -8,6 +8,8 @@ interface NoteItemProps {
 }
 
 export function NoteItem({ note, isSelected, onSelect, onDelete }: NoteItemProps) {
+  const tags = note.tags ?? [];
+
   return (
     <div
       onClick={() => onSelect(note.id)}
@@ -34,6 +36,16 @@ export function NoteItem({ note, isSelected, onSelect, onDelete }: NoteItemProps
       <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2 leading-relaxed">
         {note.content || '(내용 없음)'}
       </p>
+      {/* 태그 영역 (읽기 전용) */}
+      {tags.length > 0 && (
+        <div data-testid="note-tags" className="flex flex-wrap gap-1.5 mt-2">
+          {tags.map((tag) => (
+            <span key={tag} className="bg-[#dbe4e7] text-[#586064] rounded-full px-3 py-1 text-sm">
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
       <p className="text-[10px] text-muted-foreground/70 mt-2">
         {new Date(note.updatedAt).toLocaleDateString('ko-KR')}
       </p>
