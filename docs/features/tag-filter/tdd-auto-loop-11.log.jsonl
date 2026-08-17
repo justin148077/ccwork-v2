@@ -4,3 +4,4 @@
 {"step":"ac_verify","status":"OK","issue":11,"ac_results":[{"id":"AC-2.1","verdict":"pass","note":"order preserved, test passes"},{"id":"AC-2.2","verdict":"pass","note":"empty/missing tags render nothing, no console.error"}],"ac_passed":true,"reason":null}
 {"step":"refactor","status":"OK","issue":11,"applied":[],"skipped":[],"reason":"리팩터링 대상 없음 - 34/34 통과"}
 {"step":"security","status":"OK","issue":11,"immediate_fixed":[],"recommended_remaining":[],"reason":null}
+{"step":"pr","status":"OK","issue":11,"pr_url":"https://github.com/justin148077/ccwork-v2/pull/14","reason":null}
