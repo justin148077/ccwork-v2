@@ -32,6 +32,24 @@ husky + lint-staged + commitlint로 강제됨 (`.husky/pre-commit`, `.husky/comm
   - 제목(subject) 필수, 본문(body) 필수 + 최소 2줄.
   - `git commit -m "type: 제목" -m "본문 1줄" -m "본문 2줄"` 형태로 커밋할 것 — `-m` 하나만 쓰면 본문 부족으로 거부됨.
 
+## Workflow: TDD 이슈 사이클
+
+새 이슈 작업 시 아래 순서를 따른다. Claude Code는 이 사이클의 흐름을 능동적으로 제어한다 — 현재 어느 단계인지 파악하고, 완료되면 다음 단계를 사용자에게 제안한다.
+
+1. `/test-scenarios N` — 시그니처 + 시나리오 확정 (skill)
+2. `/tdd-red N` — 실패하는 테스트 작성 (skill)
+3. `/tdd-green N` — 최소 구현으로 테스트 전체 통과 (skill)
+4. `@ac-verifier N` — AC(Acceptance Criteria) 충족 여부 독립 검증 (agent). 테스트 통과 ≠ AC 충족이므로 반드시 별도 단계로 거친다.
+5. `/tdd-refactor N` — 구조 개선, 테스트가 깨지면 즉시 롤백 (skill)
+6. `/security-review N` — 타입 오류·보안 취약점 점검 (skill)
+7. 커밋 → `PR --base feature/<spec>` → squash merge → 이슈 클로즈
+
+규칙:
+
+- 각 단계 사이에는 인간 승인 게이트가 있다. **한 단계가 끝나도 자동으로 다음 단계를 실행하지 말 것** — 결과를 보고하고 다음 단계 실행 여부를 물어본다.
+- 이슈 간 의존성이 있으면, 선행 이슈가 머지된 `feature/<spec>` 브랜치에서 새 작업 브랜치를 분기한다.
+- 사용자가 단계를 건너뛰거나 순서를 바꾸도록 명시적으로 요청하면 그에 따르되, 건너뛴 단계가 있음을 짚어준다.
+
 ## Architecture
 
 ```
