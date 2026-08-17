@@ -72,47 +72,70 @@ async function handleSave(): Promise<void>;
 
 ### 컴포넌트(RTL) 시나리오
 
-**시나리오 1 — 태그 입력 후 Enter로 칩이 렌더링된다** (AC-1.1)
+- [x] **시나리오 1 — 태그 입력 후 Enter로 칩이 렌더링된다** (AC-1.1)
 
 - **Given** `tags: []`인 노트를 mock으로 `NoteEditor`를 렌더링, 태그 입력란(`tagInput` 바인딩된 input)이 화면에 있고
 - **When** 입력란에 `react`를 입력한 뒤 `{Enter}` 키 이벤트를 발생시키면
 - **Then** `react` 텍스트를 포함한 칩 요소가 DOM에 나타나고, 입력란의 value는 다시 빈 문자열이다
 - **검증 지점**: `handleAddTag`의 Enter 분기 → `tags` 배열 갱신 → `tagInput` 리셋
 
-**시나리오 2 — Enter가 아닌 키 입력은 태그를 추가하지 않는다**
+- [x] **시나리오 2 — Enter가 아닌 키 입력은 태그를 추가하지 않는다**
 
 - **Given** 태그 입력란에 `react`가 입력된 상태이고
 - **When** Enter가 아닌 다른 키(예: Tab, 일반 문자 입력 도중의 keydown)를 발생시키면
 - **Then** 칩이 추가되지 않고 입력란의 값은 `react`로 유지된다
 - **검증 지점**: `handleAddTag`가 `e.key === 'Enter'` 조건을 실제로 가드하는지
 
-**시나리오 3 — 저장 전에는 `updateNote`가 호출되지 않는다** (AC-1.2)
+- [x] **시나리오 3 — 저장 전에는 `updateNote`가 호출되지 않는다** (AC-1.2)
 
 - **Given** 노트를 열어 `react` 태그를 칩으로 추가했지만
 - **When** [저장] 버튼을 누르지 않은 상태에서 mock한 `updateNote`(`useNotes`의 `updateNote`)의 호출 여부를 확인하면
 - **Then** `updateNote`는 호출되지 않는다 (호출 횟수 0)
 - **검증 지점**: 태그 추가가 로컬 `tags` state만 바꾸고 서버 호출과 분리되어 있는지
 
-**시나리오 4 — [저장] 클릭 시 `updateNote`가 `tags`를 포함해 호출된다** (AC-1.3)
+- [x] **시나리오 4 — [저장] 클릭 시 `updateNote`가 `tags`를 포함해 호출된다** (AC-1.3)
 
 - **Given** 기존 노트(`id: 'n1'`, `title: '제목'`, `content: '내용'`, `tags: []`)를 열어 `react` 태그를 추가한 상태이고, `useNotes`의 `updateNote`를 mock 함수로 대체했고
 - **When** [저장] 버튼을 클릭하면
 - **Then** `updateNote`가 정확히 `('n1', { title: '제목', content: '내용', tags: ['react'] })` 인자로 1회 호출된다
 - **검증 지점**: `handleSave`의 `isCreating`이 아닌 분기가 `tags`까지 포함해 `updateNote`를 호출하는지
 
-**시나리오 5 — `tags` 필드가 없는 노트를 열어도 throw하지 않고 빈 태그 목록으로 표시된다** (AC-1.4)
+- [x] **시나리오 5 — `tags` 필드가 없는 노트를 열어도 throw하지 않고 빈 태그 목록으로 표시된다** (AC-1.4)
 
 - **Given** `tags` 필드 자체가 없는 노트 객체(`{ id, title, content, createdAt, updatedAt }`, `tags` 키 없음)를 mock 데이터로 주입해 `NoteEditor`를 렌더링하면
 - **When** 렌더링이 완료되면
 - **Then** 콘솔 에러(`console.error`) 없이 렌더링되고, 칩이 하나도 없는(태그 영역이 빈) 상태로 표시된다
 - **검증 지점**: `useEffect` 동기화의 `selectedNote.tags ?? []` 방어 로직
 
-**시나리오 6 — 노트를 전환하면 태그 목록도 함께 전환된다** (AC-1.1/US-3 보강)
+- [x] **시나리오 6 — 노트를 전환하면 태그 목록도 함께 전환된다** (AC-1.1/US-3 보강)
 
 - **Given** `tags: ['react']`인 노트 A가 열려 `react` 칩이 보이는 상태이고
 - **When** `selectedNoteId`를 `tags: ['typescript']`인 노트 B로 바꾸면
 - **Then** `react` 칩은 사라지고 `typescript` 칩만 보인다
 - **검증 지점**: `useEffect`가 `selectedNoteId` 변경 시 `setTags(selectedNote.tags ?? [])`를 다시 실행하는지 — `CLAUDE.md`에 기록된 기존 `useEffect` deps 이슈와 맞닿아 있어, 이 시나리오가 실패하면 그 이슈가 태그에도 영향을 준다는 신호
+
+### 추가 시나리오 — AC-1.3 갭 보강
+
+> `ac-verifier` agent가 TAG-1 구현을 검증한 결과, AC-1.3 "저장하면 tags가 서버에 반영되고 새로고침 후에도 유지된다" 중 전반부(반영)만 시나리오 4로 커버되고 후반부(새로고침 후 유지)는 자동화 테스트가 없었다(수동 시나리오 7에만 있었고 체크박스가 없어 실행 여부가 추적되지 않음). `/test-scenarios 1`을 재실행해 이 갭만 보강한다 — 이미 승인된 시그니처(위 1단계)는 변경되지 않으므로 시그니처 재확정 없이 시나리오만 추가.
+
+- [x] **시나리오 9 — `updateNote` 서버 응답의 `tags`가 context state에 반영되어 이후 조회 시 유지된다** (AC-1.3 후반부)
+
+- **Given** `NotesProvider`로 감싼 테스트 컴포넌트가 있고, `api.fetchNotes`를 mock해 `tags: []`인 노트 하나(`id: 'n1'`)를 초기 로드하고, `api.updateNote`를 mock해 `tags: ['react']`가 포함된 노트를 반환하도록 설정했고
+- **When** `useNotes().updateNote('n1', { title, content, tags: ['react'] })`를 호출하면
+- **Then** `useNotes().notes`에서 `id: 'n1'`인 노트를 다시 찾았을 때 `tags`가 `['react']`로 반영되어 있다
+- **검증 지점**: `NotesContext.updateNote`가 `api.updateNote`의 서버 응답(`updated`)으로 `notes` 배열의 해당 항목을 정확히 교체하는지(`setNotes((prev) => prev.map(...))`). `NoteEditor`가 노트를 열 때 이 `notes` 배열에서 값을 읽어 칩을 그리므로(`selectedNote.tags`), 이 경로가 맞으면 재조회(=새로고침) 후에도 태그가 보이는 것과 동일한 데이터 흐름이 검증된다.
+- **파일 위치**: `src/context/NotesContext.test.tsx` (신규) — 기존 `NoteEditor.test.tsx`는 `useNotes` 자체를 mock하므로 이 시나리오(실제 `NotesProvider` + `api` 계층 통과)와 같은 파일에 둘 수 없다.
+- **범위 한계**: 실제 브라우저 새로고침이나 `fetchNotes` 재호출까지 시뮬레이션하지는 않는다 — `fetchNotes`는 이 이슈에서 변경되지 않은 기존 함수이므로 신뢰하고, "서버 응답이 state에 정확히 반영되는가"라는 핵심 계약만 좁혀서 검증한다. → 이 한계는 시나리오 10에서 보강됐다.
+
+- [x] **시나리오 10 — Provider가 재마운트되어 다시 조회해도(=새로고침 시뮬레이션) 반영된 태그가 유지된다** (AC-1.3 후반부, 시나리오 9 보강)
+
+> `ac-verifier`가 시나리오 9를 재검증한 결과, "서버 응답이 state에 반영된다"(증명됨)와 "새로고침 후에도 유지된다"(미증명)는 논리적으로 다른 주장이라고 지적했다. 새로고침은 `NotesProvider`가 통째로 리마운트되어 `fetchNotes()`가 마운트 시 1회 다시 호출되는 것과 동일하므로(`NotesContext.tsx`의 `useEffect(() => { api.fetchNotes()... }, [])`), 이 시나리오는 그 리마운트를 직접 시뮬레이션한다.
+
+- **Given** `NotesProvider`를 마운트해 `api.fetchNotes`가 `tags: []`인 노트를 반환하도록 하고, `updateNote('n1', { ..., tags: ['react'] })`를 호출해 로컬 state를 갱신한 뒤, 이 Provider 인스턴스를 언마운트하고
+- **When** `api.fetchNotes`가 이번에는 `tags: ['react']`를 반환하도록(=서버에 저장된 결과를 재조회하는 상황을 흉내) 설정한 채 `NotesProvider`를 새로 마운트하면
+- **Then** 새로 마운트된 인스턴스의 `notes`에서 `id: 'n1'` 노트를 찾았을 때 `tags`가 `['react']`다
+- **검증 지점**: Provider 리마운트 시 `fetchNotes`가 다시 호출되고 그 결과가 `notes` state를 새로 채우는지 — "새로고침 후 유지"의 클라이언트 측 데이터 흐름 전체(초기 반영 → 리마운트 → 재조회 → 표시)를 자동화로 커버한다.
+- **범위 한계**: `api.fetchNotes`/`api.updateNote`를 여전히 mock하므로, json-server가 실제로 PATCH된 값을 디스크에 영속화하는지 자체는 검증하지 않는다 — 그 마지막 한 칸(실제 서버 영속화)은 수동 시나리오 7의 몫으로 남는다.
 
 ### 수동 시나리오
 
