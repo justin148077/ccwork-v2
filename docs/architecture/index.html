@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Notes 앱 아키텍처</title>
+<style>
+  :root {
+    --bg: #f7f5f2;
+    --card-bg: #ffffff;
+    --border: #e6e1da;
+    --foreground: #2a2622;
+    --muted: #7a7369;
+    --accent: #b34a2c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 0 0 4rem;
+    background: var(--bg);
+    color: var(--foreground);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Segoe UI", sans-serif;
+    line-height: 1.6;
+  }
+  header {
+    padding: 2.5rem 1.5rem 1.5rem;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+  header h1 {
+    font-size: 1.75rem;
+    margin: 0 0 0.5rem;
+  }
+  header p {
+    color: var(--muted);
+    margin: 0.25rem 0;
+    font-size: 0.95rem;
+  }
+  main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+  section {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 1.25rem;
+    padding: 1.75rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  }
+  section h2 {
+    font-size: 1.25rem;
+    margin: 0 0 0.5rem;
+  }
+  section .desc {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin: 0 0 1.25rem;
+  }
+  .legend {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-bottom: 1rem;
+  }
+  .legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .legend .line {
+    width: 22px;
+    height: 0;
+    border-top: 2px solid var(--foreground);
+    display: inline-block;
+  }
+  .legend .dashed {
+    border-top: 2px dashed var(--accent);
+  }
+  .diagram-wrap {
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+  }
+  pre.mermaid {
+    margin: 0;
+  }
+  footer {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    color: var(--muted);
+    font-size: 0.82rem;
+  }
+  code {
+    background: #efeae2;
+    padding: 0.1rem 0.35rem;
+    border-radius: 0.35rem;
+    font-size: 0.85em;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📝 Notes 앱 — 구조 시각화</h1>
+  <p>React 19 + TypeScript + Vite 노트 앱의 <code>src/</code> 디렉토리를 정적 분석해서 그린 다이어그램입니다.</p>
+  <p>컴포넌트 간 의존성 관계와 상태(서버 상태 / 로컬 UI 상태)의 흐름을 각각 보여줍니다. <code>src/</code> 구조가 바뀌면 <code>mermaid-diagram</code> 스킬을 다시 실행해서 갱신하세요.</p>
+</header>
+
+<main>
+
+  <section>
+    <h2>1. 컴포넌트 의존성 그래프</h2>
+    <p class="desc">
+      <code>src/</code> 각 파일의 import 관계를 계층(entry / App / context / components / api / types)으로 묶어서 표현했습니다.
+      실선은 일반 import, 점선은 <code>useNotes()</code>를 통한 Context 구독 관계입니다 (import 그래프만으로는 드러나지 않는 런타임 의존이라 별도 표시).
+    </p>
+    <div class="legend">
+      <span><span class="line"></span> import (실선)</span>
+      <span><span class="line dashed"></span> useNotes() 구독 (점선)</span>
+    </div>
+    <div class="diagram-wrap">
+<pre class="mermaid">
+flowchart LR
+  subgraph entry["진입점"]
+    main["main.tsx"]
+  end
+
+  subgraph appLayer["App"]
+    App["App.tsx<br/>(selectedNoteId, isCreating)"]
+  end
+
+  subgraph contextLayer["context/"]
+    NotesContext["NotesContext.tsx<br/>NotesProvider · useNotes"]
+  end
+
+  subgraph componentsLayer["components/"]
+    Layout["Layout.tsx"]
+    NoteList["NoteList.tsx"]
+    NoteEditor["NoteEditor.tsx"]
+    NoteItem["NoteItem.tsx"]
+  end
+
+  subgraph apiLayer["api/"]
+    apiNotes["notes.ts"]
+  end
+
+  subgraph typesLayer["types/"]
+    noteType["note.ts"]
+  end
+
+  main --> App
+  App --> NotesContext
+  App --> Layout
+  App --> NoteList
+  App --> NoteEditor
+  NoteList --> NoteItem
+  NoteItem --> noteType
+  NotesContext --> apiNotes
+  NotesContext --> noteType
+  apiNotes --> noteType
+
+  NoteList -. "useNotes()" .-> NotesContext
+  NoteEditor -. "useNotes()" .-> NotesContext
+
+  layoutNote["📌 Layout.tsx는 NoteList/NoteEditor를<br/>직접 import하지 않음 — App.tsx가<br/>sidebar/main ReactNode props로 합성"]
+  layoutNote -.-> Layout
+
+  classDef note fill:#fdf6ec,stroke:#b34a2c,stroke-width:1px,color:#7a4a2c,font-size:11px;
+  class layoutNote note
+</pre>
+    </div>
+  </section>
+
+  <section>
+    <h2>2. 상태 흐름 다이어그램</h2>
+    <p class="desc">
+      서버 상태(<code>NotesContext</code>의 <code>notes</code>/<code>isLoading</code>/<code>error</code>)와
+      로컬 UI 상태(<code>App.tsx</code>의 선택/작성 모드, <code>NoteEditor.tsx</code>의 입력 폼)를 구분해서,
+      초기 로드 · 노트 선택 · 새 노트 작성 · 저장(CRUD) · 삭제 흐름을 표시했습니다.
+      낙관적 업데이트 없이 API 응답을 받은 뒤에만 <code>setNotes</code>가 갱신되는 구조를 반영합니다.
+    </p>
+    <div class="diagram-wrap">
+<pre class="mermaid">
+flowchart TD
+  subgraph server["🗄️ 서버 상태 — NotesContext (NotesProvider)"]
+    notesState["notes: Note[]"]
+    loadingState["isLoading"]
+    errorState["error"]
+  end
+
+  subgraph appLocal["🧩 로컬 UI 상태 — App.tsx"]
+    selectedId["selectedNoteId"]
+    isCreatingState["isCreating"]
+  end
+
+  subgraph editorLocal["🧩 로컬 UI 상태 — NoteEditor.tsx"]
+    formState["title / content"]
+    isSavingState["isSaving"]
+  end
+
+  subgraph backend["json-server (localhost:3001)"]
+    db[("db.json")]
+  end
+
+  mount(["앱 마운트"]) --> fetchNotes["api.fetchNotes()"]
+  fetchNotes -->|"GET /notes"| db
+  db -->|"응답"| notesState
+  fetchNotes -.-> loadingState
+  fetchNotes -.->|"실패시"| errorState
+
+  clickNote(["노트 클릭 (NoteItem)"]) --> selectHandler["App.handleSelectNote"]
+  selectHandler --> selectedId
+  selectHandler -->|"isCreating = false"| isCreatingState
+  selectedId -->|"props"| formState
+  formState -.->|"useEffect deps=[selectedNoteId, isCreating]<br/>⚠ notes만 갱신되면 재동기화 안 될 수 있음"| notesState
+
+  clickNew(["+ 새 노트 클릭"]) --> newHandler["App.handleNewNote"]
+  newHandler -->|"selectedNoteId = null"| selectedId
+  newHandler -->|"isCreating = true"| isCreatingState
+
+  clickSave(["저장 클릭"]) --> saveHandler["NoteEditor.handleSave"]
+  saveHandler --> isSavingState
+  saveHandler -->|"isCreating ? createNote : updateNote"| ctxAction["context.createNote / updateNote"]
+  ctxAction -->|"POST / PATCH"| db
+  db -->|"응답 Note"| notesState
+  ctxAction -->|"await 완료 후"| doneHandler["onDone → App.handleDone"]
+  doneHandler -->|"isCreating = false"| isCreatingState
+
+  clickDelete(["삭제 클릭 (NoteItem)"]) --> deleteHandler["onDelete → context.deleteNote"]
+  deleteHandler -->|"DELETE"| db
+  deleteHandler -->|"성공시 filter"| notesState
+
+  classDef serverState fill:#eef4ff,stroke:#3b5bdb,color:#1e2a5c;
+  classDef localState fill:#fdf6ec,stroke:#b34a2c,color:#7a4a2c;
+  classDef action fill:#f1f0ee,stroke:#7a7369,color:#2a2622;
+  class notesState,loadingState,errorState serverState;
+  class selectedId,isCreatingState,formState,isSavingState localState;
+  class mount,clickNote,clickNew,clickSave,clickDelete action;
+</pre>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <p>생성: <code>mermaid-diagram</code> 스킬 · 정적 코드 분석 기반 (실제 네트워크 요청 결과는 반영하지 않음) · <code>src/</code> 변경 시 재실행 필요</p>
+</footer>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, theme: "neutral", securityLevel: "loose" });
+</script>
+
+</body>
+</html>
