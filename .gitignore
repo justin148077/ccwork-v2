@@ -30,3 +30,8 @@ dist-ssr/
 
 # Claude Code
 .claude/settings.local.json
+
+# Playwright
+test-results/
+playwright-report/
+db.json.e2e-backup
